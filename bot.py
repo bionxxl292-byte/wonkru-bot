@@ -1695,6 +1695,7 @@ async def tag_ekle(ctx, uye: discord.Member = None):
         f"{hedef.mention} → `{yeni_nick}`{rol_mesaji}",
         discord.Color.green()
     ))
+    await ctx.send(f"𖣂")
 
 
 # ── LİNK FİLTRESİ ─────────────────────────────────────────────────────────────
