@@ -4,6 +4,8 @@ from discord import app_commands
 from discord.ext import commands, tasks
 import os
 import json
+import threading
+import http.server
 
 # Opus kütüphanesini dinamik olarak bul ve yükle (ses kanalı için gerekli)
 import ctypes.util, glob as _glob
@@ -5983,17 +5985,21 @@ _parts = TOKEN.split(".")
 if len(_parts) == 6:
     TOKEN = ".".join(_parts[3:])
 
-# ── Process lock: aynı anda iki bot.py çalışmasını engelle ──────────────────
-import fcntl as _fcntl
-_LOCK_PATH = "/tmp/wonkru_main_bot.lock"
-_lock_file = open(_LOCK_PATH, "w")
-try:
-    _fcntl.flock(_lock_file, _fcntl.LOCK_EX | _fcntl.LOCK_NB)
-    print(f"[Bot] ✅ Process lock alındı (PID={os.getpid()})")
-except BlockingIOError:
-    print(f"[Bot] ❌ Başka bir bot instance zaten çalışıyor! Bu process kapatılıyor.")
-    import sys as _sys
-    _sys.exit(0)
+# ── Health check HTTP sunucusu (Railway rolling deploy sorununu çözer) ───────
+def _start_health_server():
+    port = int(os.environ.get("PORT", 8080))
+    class _Handler(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"OK")
+        def log_message(self, *args):
+            pass
+    server = http.server.HTTPServer(("0.0.0.0", port), _Handler)
+    print(f"[Health] HTTP health server başlatıldı → port {port}", flush=True)
+    server.serve_forever()
+
+threading.Thread(target=_start_health_server, daemon=True).start()
 # ─────────────────────────────────────────────────────────────────────────────
 
 bot.run(TOKEN)
