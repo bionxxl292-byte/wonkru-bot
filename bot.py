@@ -358,8 +358,13 @@ def bot_komutu_var(ctx):
 @bot.event
 async def on_command_error(ctx, error):
     # Local @command.error handler varsa global'i çalıştırma
-    if ctx.command and hasattr(ctx.command, 'on_error'):
-        return
+    if ctx.command is not None:
+        try:
+            if ctx.command.has_error_handler():
+                return
+        except Exception:
+            if hasattr(ctx.command, 'on_error'):
+                return
     if isinstance(error, commands.CheckFailure):
         await ctx.send(embed=mod_embed(
             "❌ Erişim Yok",
