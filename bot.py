@@ -3035,8 +3035,16 @@ def kat_grupla(guild: discord.Guild, voice_data: dict) -> dict:
     return gruplar
 
 
+_islenen_mesajlar: set[int] = set()
+
 @bot.event
 async def on_message(message: discord.Message):
+    global _islenen_mesajlar
+    if message.id in _islenen_mesajlar:
+        return
+    _islenen_mesajlar.add(message.id)
+    if len(_islenen_mesajlar) > 2000:
+        _islenen_mesajlar = set(list(_islenen_mesajlar)[-1000:])
     if message.author.bot or not message.guild:
         await bot.process_commands(message)
         return
