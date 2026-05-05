@@ -3171,6 +3171,7 @@ def kat_grupla(guild: discord.Guild, voice_data: dict) -> dict:
 
 
 _islenen_mesajlar: set[int] = set()
+_nick_isleniyor: set[int] = set()  # sonsuz döngü önlemi
 
 @bot.event
 async def on_message(message: discord.Message):
@@ -5163,6 +5164,55 @@ async def on_member_update(before: discord.Member, after: discord.Member):
             ), "mute")
         except Exception:
             pass
+
+    # ── Nick değişikliği koruması ─────────────────────────────────────────────
+    TAG = "𖣂"
+    if before.nick != after.nick and after.id not in _nick_isleniyor:
+        await asyncio.sleep(0.4)
+        degistiren = None
+        try:
+            async for entry in guild.audit_logs(
+                action=discord.AuditLogAction.member_update, limit=5
+            ):
+                if entry.target and entry.target.id == after.id:
+                    if (discord.utils.utcnow() - entry.created_at).total_seconds() < 6:
+                        degistiren = entry.user
+                        break
+        except (discord.Forbidden, discord.HTTPException):
+            pass
+
+        # Bot veya yetkili (manage_nicknames) değiştirdiyse karışma
+        bot_degistirdi = degistiren is not None and degistiren.bot
+        yetkili_degistirdi = (
+            degistiren is not None
+            and not degistiren.bot
+            and degistiren.id != after.id
+        )
+        if not bot_degistirdi and not yetkili_degistirdi:
+            # Üye kendi nickini değiştirdi
+            is_booster = after.premium_since is not None
+            yeni_nick = after.nick or ""
+            _nick_isleniyor.add(after.id)
+            try:
+                if is_booster:
+                    # İzin var ama 𖣂 tag korunur
+                    if not yeni_nick:
+                        # Nick silmeye çalıştı → eski nicke döndür
+                        await after.edit(nick=before.nick, reason="Booster: nick kaldırılamaz")
+                    elif not yeni_nick.startswith(TAG):
+                        # Tag kaldırıldı → başa ekle
+                        await after.edit(
+                            nick=f"{TAG} {yeni_nick.lstrip()}",
+                            reason="Booster: sunucu tagı korundu"
+                        )
+                else:
+                    # Normal üye → nick değiştirme izni yok, eski haline döndür
+                    await after.edit(nick=before.nick, reason="Nick değiştirme izni yok")
+            except (discord.Forbidden, discord.HTTPException):
+                pass
+            finally:
+                _nick_isleniyor.discard(after.id)
+    # ──────────────────────────────────────────────────────────────────────────
 
     # Rol ekleme var mı?
     eklenen_roller = [r for r in after.roles if r not in before.roles]
