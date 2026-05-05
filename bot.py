@@ -5032,6 +5032,23 @@ BION_SAYFALAR = [
             ("`           .yçek @kullanıcı`",  "Tüm Wonkru yetkilerini al  *(Rol Yönetimi)*"),
         ],
     },
+    {
+        "baslik": "🔗 Link & Nick Sistemi",
+        "renk": discord.Color.from_rgb(220, 80, 80),
+        "komutlar": [
+            ("`        .linkfiltre / .lf`",          "Link filtresi durumunu gösterir  *(Sunucu Yönetimi)*"),
+            ("`          .linkfiltre aç`",            "Link filtresini aktif eder  *(Sunucu Yönetimi)*"),
+            ("`       .linkfiltre kapat`",            "Link filtresini kapatır  *(Sunucu Yönetimi)*"),
+            ("`.linkfiltre rol @rol`",                "Belirtilen role link izni verir  *(Sunucu Yönetimi)*"),
+            ("`.linkfiltre rolçıkar @rol`",           "Rolün link muaflığını kaldırır  *(Sunucu Yönetimi)*"),
+            ("`.linkfiltre kanal #kanal`",            "Kanalda linklere izin verir  *(Sunucu Yönetimi)*"),
+            ("`.linkfiltre kanalçıkar #kanal`",       "Kanalın link muaflığını kaldırır  *(Sunucu Yönetimi)*"),
+            ("`        🔒 Nick Koruması`",            ""),
+            ("`       𖣂 isim | yaş`",                "Kayıt sonrası otomatik tag formatı"),
+            ("`        Booster Nick`",                "Booster'lar nick değiştirebilir — 𖣂 tag korunur"),
+            ("`       Normal Üye Nick`",              "Normal üyeler kendi nickini değiştiremez, bot geri alır"),
+        ],
+    },
 ]
 
 
