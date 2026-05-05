@@ -343,7 +343,7 @@ async def on_ready():
     if not saatlik_puan_ver.is_running():
         saatlik_puan_ver.start()
     ses_durum_yaz()
-    print(f"✅ {bot.user} olarak giriş yapıldı (ID: {bot.user.id})")
+    print(f"✅ {bot.user} olarak giriş yapıldı (ID: {bot.user.id}) | PID={os.getpid()}")
     print(f"   {len(bot.guilds)} sunucuda aktif")
     print(f"   Prefix: . | Slash komutlar da aktif")
 
