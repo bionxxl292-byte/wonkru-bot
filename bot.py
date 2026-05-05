@@ -3785,6 +3785,7 @@ async def puan_cikar_error(ctx, error):
 @bot.command(name="p", aliases=["puan", "yetkim", "rank", "seviyem", "rolum"])
 @commands.check(bot_komutu_var)
 async def puan_goster(ctx, uye: discord.Member = None):
+    print(f"[DEBUG .p] PID={os.getpid()} msg_id={ctx.message.id} author={ctx.author}", flush=True)
     uye = uye or ctx.author
     now = datetime.utcnow()
 
@@ -5984,6 +5985,18 @@ if not TOKEN:
 _parts = TOKEN.split(".")
 if len(_parts) == 6:
     TOKEN = ".".join(_parts[3:])
+
+# ── Process lock: aynı anda iki bot.py çalışmasını engelle ──────────────────
+import fcntl as _fcntl, sys as _sys
+_LOCK_PATH = "/tmp/wonkru_main_bot.lock"
+_lock_file = open(_LOCK_PATH, "w")
+try:
+    _fcntl.flock(_lock_file, _fcntl.LOCK_EX | _fcntl.LOCK_NB)
+    print(f"[Bot] ✅ Process lock alındı (PID={os.getpid()})", flush=True)
+except BlockingIOError:
+    print(f"[Bot] ❌ Zaten bir instance çalışıyor — bu process kapatılıyor (PID={os.getpid()})", flush=True)
+    _sys.exit(0)
+# ─────────────────────────────────────────────────────────────────────────────
 
 # ── Health check HTTP sunucusu (Railway rolling deploy sorununu çözer) ───────
 def _start_health_server():
