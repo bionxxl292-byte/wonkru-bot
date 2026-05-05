@@ -1638,6 +1638,48 @@ async def slash_purge(interaction: discord.Interaction, adet: int):
     await interaction.followup.send(embed=mod_embed("🗑️ Mesajlar Silindi", f"**{len(deleted)}** mesaj silindi.", discord.Color.green()), ephemeral=True)
 
 
+# ── TAG KOMUTU ────────────────────────────────────────────────────────────────
+
+@bot.command(name="tag")
+async def tag_ekle(ctx, uye: discord.Member = None):
+    """Nicke 𖣂 sunucu tagı ekler. Başkasına eklemek için manage_nicknames gerekli."""
+    TAG = "𖣂"
+    hedef = uye or ctx.author
+
+    if hedef != ctx.author and not ctx.author.guild_permissions.manage_nicknames:
+        return await ctx.send(embed=mod_embed(
+            "❌ Yetki Gerekli",
+            "Başkasının nickine tag eklemek için **Nickname Yönetme** yetkisi gerekli.",
+            discord.Color.red()
+        ))
+
+    mevcut = hedef.nick or hedef.name
+    if mevcut.startswith(TAG):
+        return await ctx.send(embed=mod_embed(
+            "ℹ️ Zaten Var",
+            f"{hedef.mention} zaten `{TAG}` tagına sahip.",
+            discord.Color.blurple()
+        ))
+
+    yeni_nick = f"{TAG} {mevcut.lstrip()}"
+    _nick_isleniyor.add(hedef.id)
+    try:
+        await hedef.edit(nick=yeni_nick, reason=f"Tag eklendi — {ctx.author}")
+        await ctx.send(embed=mod_embed(
+            "✅ Tag Eklendi",
+            f"{hedef.mention} → `{yeni_nick}`",
+            discord.Color.green()
+        ))
+    except discord.Forbidden:
+        await ctx.send(embed=mod_embed(
+            "❌ Hata",
+            "Nickname değiştirilemedi (yetki yetersiz).",
+            discord.Color.red()
+        ))
+    finally:
+        _nick_isleniyor.discard(hedef.id)
+
+
 # ── LİNK FİLTRESİ ─────────────────────────────────────────────────────────────
 
 @bot.group(name="linkfiltre", aliases=["lf"], invoke_without_command=True)
@@ -5036,6 +5078,8 @@ BION_SAYFALAR = [
         "baslik": "🔗 Link & Nick Sistemi",
         "renk": discord.Color.from_rgb(220, 80, 80),
         "komutlar": [
+            ("`               .tag`",                 "Kendi nickine 𖣂 tagı ekler  *(Herkes)*"),
+            ("`        .tag @kullanıcı`",             "Başkasının nickine 𖣂 ekler  *(Nickname Yönetme)*"),
             ("`        .linkfiltre / .lf`",          "Link filtresi durumunu gösterir  *(Sunucu Yönetimi)*"),
             ("`          .linkfiltre aç`",            "Link filtresini aktif eder  *(Sunucu Yönetimi)*"),
             ("`       .linkfiltre kapat`",            "Link filtresini kapatır  *(Sunucu Yönetimi)*"),
