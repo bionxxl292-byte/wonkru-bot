@@ -1,13 +1,17 @@
 #!/bin/bash
 
-echo "[Wonkru] Ana bot başlatılıyor..."
-python -u bot.py 2>&1 &
-BOT_PID=$!
+echo "[Wonkru] === BAŞLATILIYOR ==="
 
 echo "[Wonkru] Voice botlar başlatılıyor..."
-python -u voice_bots.py 2>&1 &
+python3 -u voice_bots.py &
 VOICE_PID=$!
+echo "[Wonkru] Voice PID: $VOICE_PID"
 
-trap "echo '[Wonkru] Durduruluyor...'; kill $BOT_PID $VOICE_PID 2>/dev/null" EXIT SIGTERM SIGINT
+echo "[Wonkru] Ana bot başlatılıyor..."
+python3 -u bot.py &
+BOT_PID=$!
+echo "[Wonkru] Bot PID: $BOT_PID"
 
-wait $BOT_PID $VOICE_PID
+trap "kill $VOICE_PID $BOT_PID 2>/dev/null" EXIT SIGTERM SIGINT
+
+wait $VOICE_PID $BOT_PID
