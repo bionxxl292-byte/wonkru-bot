@@ -2537,6 +2537,33 @@ async def _kayit_yap(ctx, uye: discord.Member, isim: str, yas: str, cinsiyet: st
     except Exception:
         pass
 
+    # wonkru-chat kanalına hoşgeldin mesajı gönder (3 sn sonra silinir)
+    try:
+        chat_kanal = discord.utils.find(
+            lambda c: isinstance(c, discord.TextChannel) and "wonkru-chat" in c.name.lower(),
+            ctx.guild.channels
+        )
+        if chat_kanal:
+            cinsiyet_emoji = "♂️" if cinsiyet == "erkek" else "♀️"
+            hosgeldin_embed = discord.Embed(
+                title=f"✨ Hoşgeldin, {isim}!",
+                description=(
+                    f"{uye.mention} sunucumuza katıldı! 🎉\n\n"
+                    f"{cinsiyet_emoji} **İsim:** {isim}\n"
+                    f"🎂 **Yaş:** {yas}\n"
+                    f"🏷️ **Rol:** {hedef_rol.mention}"
+                ),
+                color=renk
+            )
+            hosgeldin_embed.set_thumbnail(url=uye.display_avatar.url)
+            hosgeldin_embed.set_footer(text="WONKRU • Hoş geldin!")
+            hosgeldin_embed.timestamp = datetime.utcnow()
+            hosgeldin_msg = await chat_kanal.send(embed=hosgeldin_embed)
+            await asyncio.sleep(3)
+            await hosgeldin_msg.delete()
+    except Exception:
+        pass
+
 
 @bot.command(name="e", aliases=["erkek"])
 @commands.has_permissions(manage_roles=True)
