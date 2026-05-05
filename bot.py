@@ -1641,61 +1641,9 @@ async def slash_purge(interaction: discord.Interaction, adet: int):
 # ── TAG KOMUTU ────────────────────────────────────────────────────────────────
 
 @bot.command(name="tag")
-async def tag_ekle(ctx, uye: discord.Member = None):
-    """Nicke 𖣂 sunucu tagı ekler. Başkasına eklemek için manage_nicknames gerekli."""
-    TAG = "𖣂"
-    hedef = uye or ctx.author
-
-    if hedef != ctx.author and not ctx.author.guild_permissions.manage_nicknames:
-        return await ctx.send(embed=mod_embed(
-            "❌ Yetki Gerekli",
-            "Başkasının nickine tag eklemek için **Nickname Yönetme** yetkisi gerekli.",
-            discord.Color.red()
-        ))
-
-    mevcut = hedef.nick or hedef.name
-    if mevcut.startswith(TAG):
-        return await ctx.send(embed=mod_embed(
-            "ℹ️ Zaten Var",
-            f"{hedef.mention} zaten `{TAG}` tagına sahip.",
-            discord.Color.blurple()
-        ))
-
-    yeni_nick = f"{TAG} {mevcut.lstrip()}"
-    _nick_isleniyor.add(hedef.id)
-    try:
-        await hedef.edit(nick=yeni_nick, reason=f"Tag eklendi — {ctx.author}")
-    except discord.Forbidden:
-        await ctx.send(embed=mod_embed(
-            "❌ Hata",
-            "Nickname değiştirilemedi (yetki yetersiz).",
-            discord.Color.red()
-        ))
-        _nick_isleniyor.discard(hedef.id)
-        return
-    finally:
-        _nick_isleniyor.discard(hedef.id)
-
-    # Kendi tagını aldıysa → Wonkru Family rolü ver
-    rol_mesaji = ""
-    if hedef == ctx.author:
-        family_rol = discord.utils.find(
-            lambda r: "wonkru family" in r.name.lower(),
-            ctx.guild.roles
-        )
-        if family_rol and family_rol not in hedef.roles:
-            try:
-                await hedef.add_roles(family_rol, reason="Tag alındı → Wonkru Family")
-                rol_mesaji = f"\n🎉 **{family_rol.name}** rolü verildi!"
-            except discord.Forbidden:
-                rol_mesaji = "\n⚠️ Wonkru Family rolü verilemedi (yetki yetersiz)."
-
-    await ctx.send(embed=mod_embed(
-        "✅ Tag Eklendi",
-        f"{hedef.mention} → `{yeni_nick}`{rol_mesaji}",
-        discord.Color.green()
-    ))
-    await ctx.send(f"𖣂")
+async def tag_ekle(ctx):
+    """Sunucu tagını mesaj olarak gönderir."""
+    await ctx.send("𖣂")
 
 
 # ── LİNK FİLTRESİ ─────────────────────────────────────────────────────────────
