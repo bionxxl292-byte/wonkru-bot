@@ -6000,6 +6000,8 @@ except BlockingIOError:
 
 # ── Health check HTTP sunucusu (Railway rolling deploy sorununu çözer) ───────
 def _start_health_server():
+    if not os.environ.get("RAILWAY_ENVIRONMENT"):
+        return
     port = int(os.environ.get("PORT", 8080))
     class _Handler(http.server.BaseHTTPRequestHandler):
         def do_GET(self):
