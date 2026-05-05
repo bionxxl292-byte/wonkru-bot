@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ["python311", "libopus", "ffmpeg", "libsodium"]
-
-[phases.install]
-cmds = ["SODIUM_INSTALL=system pip install -r requirements.txt"]
-
-[start]
-cmd = "python3 -u launcher.py"
