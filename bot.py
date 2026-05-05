@@ -47,6 +47,27 @@ AUDIT_LOG_FILE   = os.path.join(_BOT_DIR, "audit_log.json")
 OTOMATIK_KARANTINA_ESIK  = 6       # kaç muteden sonra
 OTOMATIK_KARANTINA_SURE  = 1440    # dakika (1 gün)
 
+LINK_FILTRE_FILE = os.path.join(_BOT_DIR, "link_filtre.json")
+
+import re as _re
+_LINK_PATTERN = _re.compile(
+    r"(https?://|www\.|discord\.gg/|discord\.com/invite/)",
+    _re.IGNORECASE
+)
+
+def load_link_filtre():
+    if os.path.exists(LINK_FILTRE_FILE):
+        with open(LINK_FILTRE_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_link_filtre(data):
+    with open(LINK_FILTRE_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
+def get_link_filtre(guild_id):
+    return load_link_filtre().get(str(guild_id), {"aktif": False, "muaf_roller": [], "muaf_kanallar": []})
+
 
 # ── LOG HELPERS ────────────────────────────────────────────────────────────────
 
@@ -1617,6 +1638,91 @@ async def slash_purge(interaction: discord.Interaction, adet: int):
     await interaction.followup.send(embed=mod_embed("🗑️ Mesajlar Silindi", f"**{len(deleted)}** mesaj silindi.", discord.Color.green()), ephemeral=True)
 
 
+# ── LİNK FİLTRESİ ─────────────────────────────────────────────────────────────
+
+@bot.group(name="linkfiltre", aliases=["lf"], invoke_without_command=True)
+@commands.has_permissions(manage_guild=True)
+async def linkfiltre(ctx):
+    lf = get_link_filtre(ctx.guild.id)
+    durum = "🟢 Açık" if lf.get("aktif") else "🔴 Kapalı"
+    muaf_roller = [ctx.guild.get_role(r) for r in lf.get("muaf_roller", []) if ctx.guild.get_role(r)]
+    muaf_kanallar = [ctx.guild.get_channel(c) for c in lf.get("muaf_kanallar", []) if ctx.guild.get_channel(c)]
+    embed = discord.Embed(title="🔗 Link Filtresi", color=discord.Color.blurple())
+    embed.add_field(name="Durum", value=durum, inline=False)
+    embed.add_field(name="Muaf Roller", value=" ".join(r.mention for r in muaf_roller) or "Yok", inline=False)
+    embed.add_field(name="Muaf Kanallar", value=" ".join(c.mention for c in muaf_kanallar) or "Yok", inline=False)
+    embed.set_footer(text="Komutlar: .linkfiltre aç | kapat | rol @rol | kanal #kanal | rolçıkar @rol | kanalçıkar #kanal")
+    await ctx.send(embed=embed)
+
+@linkfiltre.command(name="aç", aliases=["ac"])
+@commands.has_permissions(manage_guild=True)
+async def linkfiltre_ac(ctx):
+    data = load_link_filtre()
+    gid = str(ctx.guild.id)
+    if gid not in data:
+        data[gid] = {"aktif": False, "muaf_roller": [], "muaf_kanallar": []}
+    data[gid]["aktif"] = True
+    save_link_filtre(data)
+    await ctx.send(embed=mod_embed("🟢 Link Filtresi Açıldı", "Artık izinsiz linkler otomatik silinecek.", discord.Color.green()))
+
+@linkfiltre.command(name="kapat")
+@commands.has_permissions(manage_guild=True)
+async def linkfiltre_kapat(ctx):
+    data = load_link_filtre()
+    gid = str(ctx.guild.id)
+    if gid not in data:
+        data[gid] = {"aktif": False, "muaf_roller": [], "muaf_kanallar": []}
+    data[gid]["aktif"] = False
+    save_link_filtre(data)
+    await ctx.send(embed=mod_embed("🔴 Link Filtresi Kapatıldı", "Link filtresi devre dışı.", discord.Color.orange()))
+
+@linkfiltre.command(name="rol")
+@commands.has_permissions(manage_guild=True)
+async def linkfiltre_rol(ctx, rol: discord.Role):
+    data = load_link_filtre()
+    gid = str(ctx.guild.id)
+    if gid not in data:
+        data[gid] = {"aktif": False, "muaf_roller": [], "muaf_kanallar": []}
+    if rol.id not in data[gid]["muaf_roller"]:
+        data[gid]["muaf_roller"].append(rol.id)
+    save_link_filtre(data)
+    await ctx.send(embed=mod_embed("✅ Muaf Rol Eklendi", f"{rol.mention} artık link gönderebilir.", discord.Color.green()))
+
+@linkfiltre.command(name="rolçıkar", aliases=["rolcikar"])
+@commands.has_permissions(manage_guild=True)
+async def linkfiltre_rolcikar(ctx, rol: discord.Role):
+    data = load_link_filtre()
+    gid = str(ctx.guild.id)
+    if gid not in data:
+        data[gid] = {"aktif": False, "muaf_roller": [], "muaf_kanallar": []}
+    data[gid]["muaf_roller"] = [r for r in data[gid]["muaf_roller"] if r != rol.id]
+    save_link_filtre(data)
+    await ctx.send(embed=mod_embed("✅ Muaf Rol Kaldırıldı", f"{rol.mention} artık link gönderemez.", discord.Color.orange()))
+
+@linkfiltre.command(name="kanal")
+@commands.has_permissions(manage_guild=True)
+async def linkfiltre_kanal(ctx, kanal: discord.TextChannel):
+    data = load_link_filtre()
+    gid = str(ctx.guild.id)
+    if gid not in data:
+        data[gid] = {"aktif": False, "muaf_roller": [], "muaf_kanallar": []}
+    if kanal.id not in data[gid]["muaf_kanallar"]:
+        data[gid]["muaf_kanallar"].append(kanal.id)
+    save_link_filtre(data)
+    await ctx.send(embed=mod_embed("✅ Muaf Kanal Eklendi", f"{kanal.mention} kanalında link serbest.", discord.Color.green()))
+
+@linkfiltre.command(name="kanalçıkar", aliases=["kanalcikar"])
+@commands.has_permissions(manage_guild=True)
+async def linkfiltre_kanalcikar(ctx, kanal: discord.TextChannel):
+    data = load_link_filtre()
+    gid = str(ctx.guild.id)
+    if gid not in data:
+        data[gid] = {"aktif": False, "muaf_roller": [], "muaf_kanallar": []}
+    data[gid]["muaf_kanallar"] = [c for c in data[gid]["muaf_kanallar"] if c != kanal.id]
+    save_link_filtre(data)
+    await ctx.send(embed=mod_embed("✅ Muaf Kanal Kaldırıldı", f"{kanal.mention} artık link filtresi kapsamında.", discord.Color.orange()))
+
+
 # ── USERINFO ──────────────────────────────────────────────────────────────────
 
 @bot.command(name="userinfo")
@@ -3077,6 +3183,40 @@ async def on_message(message: discord.Message):
     if message.author.bot or not message.guild:
         await bot.process_commands(message)
         return
+
+    # ── Link filtresi ──────────────────────────────────────────────────────
+    lf = get_link_filtre(message.guild.id)
+    if lf.get("aktif") and _LINK_PATTERN.search(message.content):
+        member = message.author
+        # Yöneticiler ve muaf roller geçer
+        izinli = (
+            member.guild_permissions.manage_messages
+            or any(r.id in lf.get("muaf_roller", []) for r in member.roles)
+            or message.channel.id in lf.get("muaf_kanallar", [])
+        )
+        if not izinli:
+            try:
+                await message.delete()
+            except discord.NotFound:
+                pass
+            uyari = await message.channel.send(embed=discord.Embed(
+                description=f"🔗 {member.mention} bu kanalda link paylaşamazsın!",
+                color=discord.Color.red()
+            ))
+            await asyncio.sleep(5)
+            try:
+                await uyari.delete()
+            except discord.NotFound:
+                pass
+            await send_log(message.guild, log_embed(
+                "🔗 Link Engellendi",
+                f"**Üye:** {member.mention} (`{member}`)\n**Kanal:** {message.channel.mention}\n**Mesaj:** {message.content[:200]}",
+                discord.Color.red(),
+                user=member
+            ), "genel")
+            return
+    # ──────────────────────────────────────────────────────────────────────
+
     data, user_data = get_user_stats(message.guild.id, message.author.id)
     ch_id = str(message.channel.id)
     user_data["messages"][ch_id] = user_data["messages"].get(ch_id, 0) + 1
