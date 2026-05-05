@@ -33,13 +33,14 @@ intents.members = True
 bot = commands.Bot(command_prefix=".", intents=intents)
 tree = bot.tree
 
-WARNINGS_FILE    = "discord-bot/warnings.json"
-LOGS_FILE        = "discord-bot/logs.json"
-DELETED_CHANNELS_FILE = "discord-bot/deleted_channels.json"
-STATS_FILE       = "discord-bot/stats.json"
-CEZA_FILE        = "discord-bot/ceza.json"
-MUTE_SAYAC_FILE  = "discord-bot/mute_sayac.json"
-AUDIT_LOG_FILE   = "discord-bot/audit_log.json"
+_BOT_DIR = os.path.dirname(os.path.abspath(__file__))
+WARNINGS_FILE    = os.path.join(_BOT_DIR, "warnings.json")
+LOGS_FILE        = os.path.join(_BOT_DIR, "logs.json")
+DELETED_CHANNELS_FILE = os.path.join(_BOT_DIR, "deleted_channels.json")
+STATS_FILE       = os.path.join(_BOT_DIR, "stats.json")
+CEZA_FILE        = os.path.join(_BOT_DIR, "ceza.json")
+MUTE_SAYAC_FILE  = os.path.join(_BOT_DIR, "mute_sayac.json")
+AUDIT_LOG_FILE   = os.path.join(_BOT_DIR, "audit_log.json")
 
 OTOMATIK_KARANTINA_ESIK  = 6       # kaç muteden sonra
 OTOMATIK_KARANTINA_SURE  = 1440    # dakika (1 gün)
@@ -274,7 +275,7 @@ async def setup_wonkru_log(guild: discord.Guild):
         print(f"   ❌ {guild.name} → WONKRU LOG oluşturulamadı (yetki eksik)")
 
 
-SES_DURUM_FILE = "discord-bot/ses_durum.json"
+SES_DURUM_FILE = os.path.join(_BOT_DIR, "ses_durum.json")
 
 def ses_durum_yaz():
     """Bot Command rolüne sahip üyelerin ses kanalı durumunu dosyaya yazar."""
@@ -3545,8 +3546,8 @@ async def toprank(ctx):
 
 # ── PUAN & GÖREV SİSTEMİ ────────────────────────────────────────────────────────
 
-PUAN_FILE  = "discord-bot/points.json"
-GOREV_FILE = "discord-bot/gorevler.json"
+PUAN_FILE  = os.path.join(_BOT_DIR, "points.json")
+GOREV_FILE = os.path.join(_BOT_DIR, "gorevler.json")
 
 GOREV_LISTESI = {
     "gunluk_sohbet": {
@@ -4908,7 +4909,7 @@ async def bion(ctx):
 # 🚨  ROL UYARI SİSTEMİ  (Manuel rol verme takibi)
 # ══════════════════════════════════════════════════════════════════════════════
 
-ROL_UYARI_FILE = "discord-bot/rol_uyari.json"
+ROL_UYARI_FILE = os.path.join(_BOT_DIR, "rol_uyari.json")
 
 # Bellek içi: {guild_id: {executor_id: count}}
 _rol_uyari_sayac: dict = {}
@@ -5162,7 +5163,7 @@ async def mute_sifirla_cmd(ctx, uye: discord.Member):
 # 🛡️  NUKE GUARD SİSTEMİ
 # ══════════════════════════════════════════════════════════════════════════════
 
-NUKE_GUARD_FILE = "discord-bot/nukeguard.json"
+NUKE_GUARD_FILE = os.path.join(_BOT_DIR, "nukeguard.json")
 
 # Bellek içi eylem takibi: {guild_id: {user_id: {eylem: [timestamp, ...]}}}
 _nuke_log: dict = {}
