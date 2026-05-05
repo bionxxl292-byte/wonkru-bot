@@ -5983,4 +5983,17 @@ _parts = TOKEN.split(".")
 if len(_parts) == 6:
     TOKEN = ".".join(_parts[3:])
 
+# ── Process lock: aynı anda iki bot.py çalışmasını engelle ──────────────────
+import fcntl as _fcntl
+_LOCK_PATH = "/tmp/wonkru_main_bot.lock"
+_lock_file = open(_LOCK_PATH, "w")
+try:
+    _fcntl.flock(_lock_file, _fcntl.LOCK_EX | _fcntl.LOCK_NB)
+    print(f"[Bot] ✅ Process lock alındı (PID={os.getpid()})")
+except BlockingIOError:
+    print(f"[Bot] ❌ Başka bir bot instance zaten çalışıyor! Bu process kapatılıyor.")
+    import sys as _sys
+    _sys.exit(0)
+# ─────────────────────────────────────────────────────────────────────────────
+
 bot.run(TOKEN)
