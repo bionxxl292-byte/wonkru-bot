@@ -2583,7 +2583,7 @@ async def _kayit_yap(ctx, uye: discord.Member, isim: str, yas: str, cinsiyet: st
     if not hedef_rol:
         return await ctx.send(embed=mod_embed("❌ Hata", f"`{rol_adi.capitalize()}` rolü sunucuda bulunamadı.", discord.Color.red()))
 
-    nick = f"{isim} | {yas}"
+    nick = f"𖣂 {isim} | {yas}"
     hatalar = []
 
     try:
